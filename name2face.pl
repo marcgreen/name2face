@@ -6,13 +6,13 @@ use 5.14.0;
 use Data::Dumper;
 use File::Find;
 use File::Spec;
-use GetOpt::Long;
+use Getopt::Long;
 use HTML::Element;
 use HTML::TreeBuilder;
-#use PDF::FromHTML;
+use HTML::HTMLDoc;
 
-# XXX Test section being 'name2face/Section1', etc.
-#     What will the file be named? Do images still link properly?
+# XXX Fix broken image links when usng name2usage in a different directory
+# XXX Add option to use absolute links, or relative links from a different directory
 
 # globals
 my $File; # html file from which info is extracted
@@ -21,6 +21,8 @@ GetOptions(
     'pdf!'  => \(my $Gen_pdf = 1),   # Generate .pdf by default
     'outfile=s' => \(my $Outfile),   # Name of generated pdf/html
                                      #   Default name is directory (arg) name
+    'cols=i' => \(my $Num_cols = 3), # 3 columns of students by default
+    'rows=i' => \(my $Num_rows = 4), # 4 rows of students per page by default
 );
 
 my @sections = @ARGV;
@@ -30,6 +32,7 @@ usage() unless @sections;
 foreach my $dir (@sections) {
     usage() unless -d $dir;
 
+    $dir = File::Spec->catdir($dir); # remove trailing /
     find(\&find_file, $dir); # Finds html file, puts name into $File
     my $curfile = $File;
 
@@ -56,13 +59,22 @@ BEGIN_HTML
 END_HTML
 
     # Output html version
-    my $htmlout = "$Output.html" or "$dir.html";
+    my $htmlout = defined $Outfile ? "$Outfile.html" : "$dir.html";
     open(my $fh, '>', $htmlout);
     print $fh $html;
     close $fh;
 
     # Convert html to pdf
-    my $pdfout = "$Output.pdf" or "$dir.pdf";
+    my $pdfout = defined $Outfile ? "$Outfile.pdf" : "$dir.pdf";
+    my $htmldoc = new HTML::HTMLDoc();
+    $htmldoc->set_html_content($html);
+    $htmldoc->set_page_size('letter');
+    $htmldoc->set_left_margin(1/4,'in');
+    $htmldoc->set_right_margin(1/4,'in');
+    $htmldoc->set_top_margin(1/4,'in');
+    $htmldoc->set_bottom_margin(1/4,'in');
+    my $pdf = $htmldoc->generate_pdf();
+    $pdf->to_file($pdfout);
 
     # Keep only files user specified
     unlink $htmlout unless $Gen_html;
@@ -73,14 +85,7 @@ END_HTML
 
 # Find html file
 sub find_file {
-    # make sure we have the right html file
-    /\.html$/ or return;
-    $File::Find::dir !~ /_files$/ or return; # ignore files in image dir
-    # XXX - do I know it will always end in _files?
-    # XXX - if there is more than 1 html file in the dir, the latter
-    #       alphabetical one will be assigned to $File. Fix/warn for this?
-
-    $File = $File::Find::name;
+    $File = $File::Find::name if /FacClaList\.html$/; # find the right html file
 }
 
 # Extract course info and student corpus from html file
@@ -159,10 +164,10 @@ sub format_students {
         } elsif (my $major_dept = $tr->look_down(
                      "_tag" => "th",
                      sub { $_[0]->as_text eq 'Major and Department:' } )) {
-            # Processing student, get her major
+            # Processing student, get her major and department
             my ($major, $dept) = split(/, /, $major_dept->right->as_text);
             push @{$student{'majors'}}, $major;
-            # Ignore $dept for now, I don't know what to do with it
+            $student{'dept'} = $dept;
         } elsif (my $minor = $tr->look_down(
                      "_tag" => "th",
                      sub { $_[0]->as_text eq 'Minor:' } )) {
@@ -183,54 +188,70 @@ sub format_students {
 
 sub htmlify_students {
     my ($dir, @students) = @_;
-    my $num_cols = 2; # 3 students per row
-    my $num_rows = $#students % $num_cols ? int($#students / $num_cols)
+    my $cell_space = 20; # space between table cells
+    my $num_cols = $Num_cols; # 3 students per row by default
+    my $tot_rows = $#students % $num_cols ? int($#students / $num_cols)
                                           : $#students / $num_cols - 1;
-    my $img_height = 100; # in px
-    # XXX Make rows spread out more (horizontally and vertically)
-    my $table = "<table>";
-    for my $i (0..$num_rows) {
+    my $img_h = 100; # height in px
+    my $table = "<table cellspacing='$cell_space'>";
+    for my $i (1..$tot_rows) {
         $table .= "<tr>";
-        for my $j (0..$num_cols) {
+        for my $j (1..$num_cols) {
             my %s = %{shift @students} if @students;
             last unless %s; # did we run out?
             my $img_src = File::Spec->catdir($dir, $s{'img'});
             $table .= qq|<td><img src="$img_src" |.
-                qq|alt="No Photo Available" height="${img_height}px"><br />|.
-                "<b>$s{'name'}</b><br />";
+                qq|alt="No Photo Available" height="${img_h}"> <br />|.
+                qq|<b>$s{'name'}</b><br />|;
             $table .= $#{$s{'majors'}} > 0 ? "Majors: " : "Major: ";
+            # XXX student's majors are all on one line, could push rest of page
             $table .= join(', ', @{$s{'majors'}}) ."<br />";
             if ($s{'minors'}) { # student has minor(s)
                 $table .= $#{$s{'minors'}} > 0 ? "Minors: " : "Minor: ";
                 $table .= join(', ', @{$s{'minors'}}) ."<br />";
             }
-            $table .= "Class: $s{'class'}</td>";
+            $table .= "Dept: $s{'dept'}<br />" if $s{'dept'};
+            $table .= "Class: $s{'class'}";
+            $table .= "</td>";
         }
         $table .= "</tr>";
+        # Let HTML:HTMLDoc know we want a page break every $Num_rows
+        $table .= "<!-- PAGE BREAK $i -->" unless $i % ($Num_rows);
     }
     $table .= "</table>";
 }
 
 sub usage {
-    die <<'USAGE';
+    die <<"USAGE";
 
     This program generates a pdf file (and optionally an html file) containing
     a table of student's names and their pictures, among other small details.
-    The purpose is to help professors put names to their student's faces. 
+    The purpose is to help professors put names to their student's faces.
 
-Usage: $0 --[no]html --out=<name> --[no]pdf -- section/
+Usage: perl $0 [options] -- [sections to process]
+E.g., perl $0 --html --out=classlist --rows 3 -- Section1 Section2
 
+Options
   --[no]html - generate an html file of the finished output (off by default).
-  --out      - extensionless filename given to the generated files (default is
+  --out=<nam>- extensionless filename given to the generated files (default is
                the name of the directory being processed, i.e., the argument
                given to the program).
   --[no]pdf  - generate a pdf file of the finished output (on by default).
+  --cols d   - number of columns of students in the table (3 by default). You
+               can try to squeeze 4 columns in, but it might format incorrectly.
+  --rows d   - number of rows of students per page (4 by default). Note that
+               if this number is too big, there will be overflow onto the next
+               page and *then* a page break will be issued, wasting almost a
+               whole page.
 
     The 'section/' to be processed ought to be a directory of a downloaded
     Faculty Class List, achieved by saving the bannerweb page as a
     'Web page, Complete' in a web browser. This means it should be a directory
     in which there is a single html file of the Faculty Class List and an
     accompanying directory that holds the student pictures.
+
+    The options above are provided for completeness, but they will usually
+    be unneeded. The only required one is the section/ that you want generated.
 
 USAGE
 }
