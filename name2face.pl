@@ -1,9 +1,11 @@
 #!/usr/bin/perl
+# Marc Green
 
 use warnings;
 use 5.14.0;
 
 use Data::Dumper;
+use File::Basename;
 use File::Find;
 use File::Spec;
 use Getopt::Long;
@@ -11,15 +13,16 @@ use HTML::Element;
 use HTML::TreeBuilder;
 use HTML::HTMLDoc;
 
-# XXX Fix broken image links when usng name2usage in a different directory
 # XXX Add option to use absolute links, or relative links from a different directory
+# XXX Expanding on that, user should be able to use --out to specify a different
+#     relative directory per section, and perhaps a --prefix option for all Sections
 
 # globals
 my $File; # html file from which info is extracted
 GetOptions(
     'html!' => \(my $Gen_html = 0),  # Don't generate .html by default
     'pdf!'  => \(my $Gen_pdf = 1),   # Generate .pdf by default
-    'outfile=s' => \(my $Outfile),   # Name of generated pdf/html
+    'out=s@' => \(my $Outfile),      # Name of generated pdf/html
                                      #   Default name is directory (arg) name
     'cols=i' => \(my $Num_cols = 3), # 3 columns of students by default
     'rows=i' => \(my $Num_rows = 4), # 4 rows of students per page by default
@@ -28,8 +31,7 @@ GetOptions(
 my @sections = @ARGV;
 usage() unless @sections;
 
-
-foreach my $dir (@sections) {
+while (my ($index, $dir) = each @sections) { # index used with $Outfile
     usage() unless -d $dir;
 
     $dir = File::Spec->catdir($dir); # remove trailing /
@@ -51,21 +53,24 @@ $course_info->{'duration'}
 </p>
 BEGIN_HTML
 
-    $html .= htmlify_students($dir, @students);
+    $html .= htmlify_students(basename($dir), @students);
       # $dir is passed b/c it needs to be prepended to image sources
+      # we remove any prior dirs than what is needed to make links relative
     $html .= <<"END_HTML";
 </body>
 </html>
 END_HTML
 
     # Output html version
-    my $htmlout = defined $Outfile ? "$Outfile.html" : "$dir.html";
+    my $htmlout = exists $Outfile->[$index] ? "$Outfile->[$index].html"
+                                            : "$dir.html";
     open(my $fh, '>', $htmlout);
     print $fh $html;
     close $fh;
 
     # Convert html to pdf
-    my $pdfout = defined $Outfile ? "$Outfile.pdf" : "$dir.pdf";
+    my $pdfout = exists $Outfile->[$index] ? "$Outfile->[$index].pdf"
+                                           : "$dir.pdf";
     my $htmldoc = new HTML::HTMLDoc();
     $htmldoc->set_html_content($html);
     $htmldoc->set_page_size('letter');
@@ -73,6 +78,7 @@ END_HTML
     $htmldoc->set_right_margin(1/4,'in');
     $htmldoc->set_top_margin(1/4,'in');
     $htmldoc->set_bottom_margin(1/4,'in');
+    $htmldoc->path(dirname($dir)); # to tell it where to find images
     my $pdf = $htmldoc->generate_pdf();
     $pdf->to_file($pdfout);
 
@@ -229,13 +235,15 @@ sub usage {
     The purpose is to help professors put names to their student's faces.
 
 Usage: perl $0 [options] -- [sections to process]
-E.g., perl $0 --html --out=classlist --rows 3 -- Section1 Section2
+E.g., perl $0 --html --out=classlist1 --out=classlist2
+                        --rows 3 -- Section1 Section2
 
 Options
   --[no]html - generate an html file of the finished output (off by default).
   --out=<nam>- extensionless filename given to the generated files (default is
                the name of the directory being processed, i.e., the argument
-               given to the program).
+               given to the program). You can pass multiple --out=<nam> options
+               and the nth one will be applied to the nth section.
   --[no]pdf  - generate a pdf file of the finished output (on by default).
   --cols d   - number of columns of students in the table (3 by default). You
                can try to squeeze 4 columns in, but it might format incorrectly.
@@ -249,9 +257,6 @@ Options
     'Web page, Complete' in a web browser. This means it should be a directory
     in which there is a single html file of the Faculty Class List and an
     accompanying directory that holds the student pictures.
-
-    The options above are provided for completeness, but they will usually
-    be unneeded. The only required one is the section/ that you want generated.
 
 USAGE
 }
