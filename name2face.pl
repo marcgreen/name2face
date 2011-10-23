@@ -24,9 +24,11 @@ GetOptions(
     'pdf!'  => \(my $Gen_pdf = 1),   # Generate .pdf by default
     'out=s@' => \(my $Outfile),      # Name of generated pdf/html
                                      #   Default name is directory (arg) name
-    'cols=i' => \(my $Num_cols = 3), # 3 columns of students by default
-    'rows=i' => \(my $Num_rows = 4), # 4 rows of students per page by default
+#    'cols=i' => \(my $Num_cols = 3), # 3 columns of students by default
+#    'rows=i' => \(my $Num_rows = 4), # 4 rows of students per page by default
 );
+my $Num_cols = 3; # I removed --cols and --rows options for now, so I added
+my $Num_rows = 4; # these globals
 
 my @sections = @ARGV;
 usage() unless @sections;
@@ -62,29 +64,29 @@ BEGIN_HTML
 END_HTML
 
     # Output html version
-    my $htmlout = exists $Outfile->[$index] ? "$Outfile->[$index].html"
-                                            : "$dir.html";
-    open(my $fh, '>', $htmlout);
-    print $fh $html;
-    close $fh;
+    if ($Gen_html) {
+        my $htmlout = exists $Outfile->[$index] ? "$Outfile->[$index].html"
+                                                : "$dir.html";
+        open(my $fh, '>', $htmlout);
+        print $fh $html;
+        close $fh;
+    }
 
-    # Convert html to pdf
-    my $pdfout = exists $Outfile->[$index] ? "$Outfile->[$index].pdf"
-                                           : "$dir.pdf";
-    my $htmldoc = new HTML::HTMLDoc();
-    $htmldoc->set_html_content($html);
-    $htmldoc->set_page_size('letter');
-    $htmldoc->set_left_margin(1/4,'in');
-    $htmldoc->set_right_margin(1/4,'in');
-    $htmldoc->set_top_margin(1/4,'in');
-    $htmldoc->set_bottom_margin(1/4,'in');
-    $htmldoc->path(dirname($dir)); # to tell it where to find images
-    my $pdf = $htmldoc->generate_pdf();
-    $pdf->to_file($pdfout);
-
-    # Keep only files user specified
-    unlink $htmlout unless $Gen_html;
-    unlink $pdfout  unless $Gen_pdf;
+    # Output pdf version
+    if ($Gen_pdf) {
+        my $pdfout = exists $Outfile->[$index] ? "$Outfile->[$index].pdf"
+                                               : "$dir.pdf";
+        my $htmldoc = new HTML::HTMLDoc();
+        $htmldoc->set_html_content($html);
+        $htmldoc->set_page_size('letter');
+        $htmldoc->set_left_margin(1/4,'in');
+        $htmldoc->set_right_margin(1/4,'in');
+        $htmldoc->set_top_margin(1/4,'in');
+        $htmldoc->set_bottom_margin(1/4,'in');
+        $htmldoc->path(dirname($dir)); # to tell it where to find images
+        my $pdf = $htmldoc->generate_pdf();
+        $pdf->to_file($pdfout);
+    }
 }
 
 #######
@@ -221,8 +223,8 @@ sub htmlify_students {
             $table .= "</td>";
         }
         $table .= "</tr>";
-        # Let HTML:HTMLDoc know we want a page break every $Num_rows
-        $table .= "<!-- PAGE BREAK $i -->" unless $i % ($Num_rows);
+        # Let HTML::HTMLDoc know we want a page break every $Num_rows
+        $table .= "<!-- PAGE BREAK -->" unless $i % ($Num_rows);
     }
     $table .= "</table>";
 }
@@ -235,22 +237,16 @@ sub usage {
     The purpose is to help professors put names to their student's faces.
 
 Usage: perl $0 [options] -- [sections to process]
-E.g., perl $0 --html --out=classlist1 --out=classlist2
-                        --rows 3 -- Section1 Section2
+E.g., perl $0 --html --out classlist1 --out "class list 2"
+                        -- Section1/ Section2/
 
 Options
-  --[no]html - generate an html file of the finished output (off by default).
-  --out=<nam>- extensionless filename given to the generated files (default is
+  --[no]html   generate an html file of the finished output (off by default).
+  --out <name> extensionless filename given to the generated files (default is
                the name of the directory being processed, i.e., the argument
                given to the program). You can pass multiple --out=<nam> options
                and the nth one will be applied to the nth section.
-  --[no]pdf  - generate a pdf file of the finished output (on by default).
-  --cols d   - number of columns of students in the table (3 by default). You
-               can try to squeeze 4 columns in, but it might format incorrectly.
-  --rows d   - number of rows of students per page (4 by default). Note that
-               if this number is too big, there will be overflow onto the next
-               page and *then* a page break will be issued, wasting almost a
-               whole page.
+  --[no]pdf    generate a pdf file of the finished output (on by default).
 
     The 'section/' to be processed ought to be a directory of a downloaded
     Faculty Class List, achieved by saving the bannerweb page as a
