@@ -2,7 +2,8 @@
 # Marc Green
 
 use warnings;
-use 5.14.0;
+use strict;
+#use 5.14.0;
 
 use Data::Dumper;
 use File::Basename;
@@ -33,7 +34,8 @@ my $Num_rows = 4; # these globals
 my @sections = @ARGV;
 usage() unless @sections;
 
-while (my ($index, $dir) = each @sections) { # index used with $Outfile
+my $index = 0; # used in $outfie
+for my $dir (@sections) {
     usage() unless -d $dir;
 
     $dir = File::Spec->catdir($dir); # remove trailing /
@@ -87,6 +89,7 @@ END_HTML
         my $pdf = $htmldoc->generate_pdf();
         $pdf->to_file($pdfout);
     }
+    $index++;
 }
 
 #######
@@ -244,7 +247,7 @@ Options
   --[no]html   generate an html file of the finished output (off by default).
   --out <name> extensionless filename given to the generated files (default is
                the name of the directory being processed, i.e., the argument
-               given to the program). You can pass multiple --out=<nam> options
+               given to the program). You can pass multiple --out=<name> options
                and the nth one will be applied to the nth section.
   --[no]pdf    generate a pdf file of the finished output (on by default).
 
