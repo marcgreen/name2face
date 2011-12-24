@@ -20,10 +20,10 @@ use HTML::HTMLDoc;
 # globals
 my $File; # html file from which info is extracted
 GetOptions(
-    'html!' => \(my $Gen_html = 0),  # Don't generate .html by default
-    'pdf!'  => \(my $Gen_pdf = 1),   # Generate .pdf by default
-    'out=s@' => \(my $Outfile),      # Name of generated pdf/html
-                                     #   Default name is directory (arg) name
+    'html!'  => \(my $Gen_html = 0),  # Don't generate .html by default
+    'pdf!'   => \(my $Gen_pdf = 1),   # Generate .pdf by default
+    'out=s@' => \(my $Outfile),       # Name of generated pdf/html
+                                      #   Default name is directory (arg) name
 #    'cols=i' => \(my $Num_cols = 3), # 3 columns of students by default
 #    'rows=i' => \(my $Num_rows = 4), # 4 rows of students per page by default
 );
@@ -244,7 +244,7 @@ Options
   --[no]html   generate an html file of the finished output (off by default).
   --out <name> extensionless filename given to the generated files (default is
                the name of the directory being processed, i.e., the argument
-               given to the program). You can pass multiple --out=<nam> options
+               given to the program). You can pass multiple --out=<name> options
                and the nth one will be applied to the nth section.
   --[no]pdf    generate a pdf file of the finished output (on by default).
 
