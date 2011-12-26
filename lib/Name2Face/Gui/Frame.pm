@@ -10,11 +10,12 @@ use Wx::Event qw/EVT_BUTTON/;
 
 sub new {
     my $ref = shift;
-    my $self = $ref->SUPER::new(undef,           # parent window
-                                -1,              # ID -1 means any
-                                'Name2Face',     # title
-                                [-1,-1],
-                                [600,400],
+    my $self = $ref->SUPER::new(
+        undef,           # parent window
+        -1,              # ID -1 means any
+        'Name2Face',     # title
+        [-1,-1],
+        [650,400],
         );
 
     $self->{'panel'} = Wx::Panel->new($self);
@@ -45,8 +46,9 @@ sub new {
                         [330, 90],
         );
 
-    $self->{'sectionY'} = 110; # at what Y value the section lines will start
     $self->{'sectionYInc'} = 35; # how much to increment the Y value each time
+    $self->{'sectionY'} = 110-$self->{'sectionYInc'};
+      # at what Y value the section lines will start
 
     EVT_BUTTON($self, $dirDialog, \&OnDirDialog);
 
@@ -56,6 +58,7 @@ sub new {
 sub addSectionLine {
     my $self = shift;
     my $path = shift;
+    $self->{'sectionY'} += $self->{'sectionYInc'};
 
     # path
     my $p = Wx::TextCtrl->new($self->{'panel'},
@@ -77,7 +80,7 @@ sub addSectionLine {
     # XXX add icon bmp
     my $del = Wx::Button->new($self->{'panel'},
                               -1,
-                              'Delete Section',
+                              'Delete',
                               [540,$self->{'sectionY'}],
         );
 
@@ -85,34 +88,30 @@ sub addSectionLine {
 
     push @{$self->{'lines'}}, [$p, $n, $del]; # so we can delete it if necessary
     push @{$self->{'paths'}}, $path;
-    $self->{'sectionY'} += $self->{'sectionYInc'};
 }
 
 sub OnDelSection {
     my ($self, $event) = @_;
+    my $p = $self->{'paths'};
+    my $l = $self->{'lines'};
 
     # find the delete button that triggered this deletion
-    my ($index, $line);
-    while (($index, $line) = each @{$self->{'lines'}}) {
-        last if $line->[2]->GetId == $event->GetId;
+    my $index;
+    for ($index = 0; $index < $#$l; $index++) {
+        last if $$l[$index]->[2]->GetId == $event->GetId;
     }
 
-    # LEFT OFF trying to get this to work properly
-
     # remove all entries after the deleted line, inclusive
-    my @paths = splice(@{$self->{'paths'}}, $index);
-    my @lines = splice(@{$self->{'lines'}}, $index);
+    my @paths = splice(@$p, $index);
+    my @lines = splice(@$l, $index);
     for my $line (@lines) {
         $_->Destroy for @$line; # delete all widgets in the line
     }
 
-    say Dumper(\@paths);
-
     # redraw them one line higher, (not including the deleted line, of course)
-    if (shift @paths) { # remove deleted line from @paths
-        $self->{'sectionY'} -= length(@paths)*$self->{'sectionYInc'}; # reset y position
-        $self->addSectionLine($_) for @paths;
-    }
+    $self->{'sectionY'} -= $self->{'sectionYInc'} for @paths; # reset y position
+    shift @paths; # remove deleted line from @paths
+    $self->addSectionLine($_) for @paths;
 }
 
 sub OnDirDialog {
