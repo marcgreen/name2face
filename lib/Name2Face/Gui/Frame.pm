@@ -5,7 +5,7 @@ use base "Wx::Frame";
 use warnings;
 use 5.14.0;
 use Data::Dumper;
-use Wx qw/:id/;
+use Wx qw/:id :sizer/;
 use Wx::Event qw/EVT_BUTTON/;
 
 sub new {
@@ -14,44 +14,73 @@ sub new {
         undef,           # parent window
         -1,              # ID -1 means any
         'Name2Face',     # title
-        [-1,-1],
-        [650,400],
         );
 
     $self->{'panel'} = Wx::Panel->new($self);
 
-    my $header = Wx::StaticText->new(
-        $self->{'panel'},     # Parent window
-        -1,         # no window ID
-        'Add as many sections as you want, they will appear in fields below:',
-        [20, 20],
-        );
-    #$header->Wrap(550); # wrap at col550
+    my $outerV = Wx::BoxSizer->new(wxVERTICAL);
+    my $introH = Wx::BoxSizer->new(wxHORIZONTAL);
+    my $left_introV = Wx::BoxSizer->new(wxVERTICAL);
+    my $right_introV = Wx::BoxSizer->new(wxVERTICAL);
+    my $headingH = Wx::BoxSizer->new(wxHORIZONTAL);
 
-    my $dirDialog = Wx::Button->new($self->{'panel'},
-                                    -1,
-                                    'Add a Section',
-                                    [20,45],
-        );
+   $left_introV->Add(
+       Wx::StaticText->new(
+           $self->{'panel'},     # Parent window
+           -1,         # no window ID
+           'Add as many sections as you want, they will appear in fields below:',
+       ),
+       0, 0, wxALL, 5);
 
-    Wx::StaticText->new($self->{'panel'},
-                        -1,
-                        'Path to Section',
-                        [20, 90],
-        );
+    my $addSectionBtn = Wx::Button->new(
+        $self->{'panel'},
+        -1,
+        'Add a Section',);
 
-    Wx::StaticText->new($self->{'panel'},
-                        -1,
-                        'Name of generated file(s)',
-                        [330, 90],
-        );
+    $left_introV->Add($addSectionBtn, 0, 0, wxALL, 5);
+
+   $right_introV->Add(
+       Wx::StaticText->new(
+           $self->{'panel'},
+           -1,
+           'When you are done adding Sections, generate the PDF files:',),
+       0, 0, wxALL, 5);
+
+    my $genPDFBtn = Wx::Button->new(
+        $self->{'panel'},
+        -1,
+        'Generate PDFs',);
+
+    $right_introV->Add($genPDFBtn, 0, 0, wxALL, 5);
+
+    $introH->Add($left_introV);
+    $introH->Add($right_introV);
+
+    $headingH->Add(
+        Wx::StaticText->new(
+            $self->{'panel'},
+            -1,
+            'Path to Section',),);
+
+    $headingH->Add(
+        Wx::StaticText->new(
+            $self->{'panel'},
+            -1,
+            'Name of generated file(s)',),);
 
     $self->{'sectionYInc'} = 35; # how much to increment the Y value each time
     $self->{'sectionY'} = 110-$self->{'sectionYInc'};
       # at what Y value the section lines will start
 
-    EVT_BUTTON($self, $dirDialog, \&OnDirDialog);
+    $outerV->Add($introH);
+    $outerV->Add($headingH);
 
+    EVT_BUTTON($self, $addSectionBtn, \&OnAddSection);
+    EVT_BUTTON($self, $genPDFBtn, \&OnGenPDF);
+
+    $self->SetAutoLayout(1);
+    $self->SetSizer($outerV);
+    $outerV->SetSizeHints($self);
     return $self;
 }
 
@@ -65,15 +94,15 @@ sub addSectionLine {
                       -1,
                       $path,
                       [20,$self->{'sectionY'}],
-                      [300,30],
+                      [350,30],
         );
 
     # name
     my $n = Wx::TextCtrl->new($self->{'panel'},
                       -1,
-                      $path, # need to basename() this (but do it w/ a Name2Face function)
-                      [330,$self->{'sectionY'}],
-                      [200,30],
+                      "$path.pdf",
+                      [380,$self->{'sectionY'}],
+                      [250,30],
         );
 
     # delete
@@ -81,7 +110,7 @@ sub addSectionLine {
     my $del = Wx::Button->new($self->{'panel'},
                               -1,
                               'Delete',
-                              [540,$self->{'sectionY'}],
+                              [640,$self->{'sectionY'}],
         );
 
     EVT_BUTTON($self, $del, \&OnDelSection);
@@ -114,7 +143,7 @@ sub OnDelSection {
     $self->addSectionLine($_) for @paths;
 }
 
-sub OnDirDialog {
+sub OnAddSection {
     my($self, $event) = @_;
     my $dlg = Wx::DirDialog->new($self, "Choose a Section");
     if ($dlg->ShowModal == wxID_OK) {
@@ -122,6 +151,10 @@ sub OnDirDialog {
         $self->addSectionLine($dlg->GetPath()); # Show the user
     }
     $dlg->Destroy;
+}
+
+sub onGenPDF {
+
 }
 
 1;
