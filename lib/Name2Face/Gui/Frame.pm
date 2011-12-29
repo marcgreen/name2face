@@ -18,18 +18,26 @@ sub new {
         [700,400],
         );
 
-    my $outerV = Wx::BoxSizer->new(wxVERTICAL);
+    $self->{'sizer'} = Wx::BoxSizer->new(wxVERTICAL); # top level sizer
+    $self->addInstructions(); # display instructions/buttons for the user
+    $self->addHeader(); # create the header (but keep it hidden for now)
+    $self->SetSizer($self->{'sizer'});
+    return $self;
+}
+
+sub addInstructions() {
+    my $self = shift;
+
     my $introH = Wx::BoxSizer->new(wxHORIZONTAL);
-    my $headingH = Wx::BoxSizer->new(wxHORIZONTAL);
 
     # left side of the instructions
-    my $l_instr_panel = Wx::Panel->new($self, -1, [-1, -1], [300, 100]);
+    my $l_instr_panel = Wx::Panel->new($self);
     my $instr1 = Wx::StaticText->new(
         $l_instr_panel,     # Parent window
         -1,         # no window ID
         'Add as many sections as you want, they will appear in fields below:',
         );
-    $instr1->Wrap(300);
+    $instr1->Wrap(250);
     my $addSectionBtn = Wx::Button->new(
         $l_instr_panel,
         -1,
@@ -38,13 +46,13 @@ sub new {
         );
 
     # right side of the instructions
-    my $r_instr_panel = Wx::Panel->new($self, -1, [-1, -1], [300, 100]);
+    my $r_instr_panel = Wx::Panel->new($self);
     my $instr2 = Wx::StaticText->new(
         $r_instr_panel,
         -1,
         'When you are done adding sections, generate the PDF files:',
         );
-    $instr2->Wrap(300);
+    $instr2->Wrap(250);
     my $genPDFBtn = Wx::Button->new(
         $r_instr_panel,
         -1,
@@ -52,71 +60,44 @@ sub new {
         [0, 40]
         );
 
-    $introH->Add($l_instr_panel, 0, wxALL, 20);
+    $introH->Add($l_instr_panel, 0);
     $introH->AddStretchSpacer(1);
-    $introH->Add($r_instr_panel, 0, wxALL, 20);
+    $introH->Add($r_instr_panel, 0);
 
-    # XXX why do the spacers overlap?
-
-    # heading for sections
-    my $l_head_panel = Wx::Panel->new($self, -1, [-1, -1], [100, 20]);
-    my $head1 = Wx::StaticText->new(
-        $l_head_panel,
-        -1,
-        'Path to Section',);
-    my $r_head_panel = Wx::Panel->new($self, -1, [-1, -1], [100, 20]);
-    my $head2 = Wx::StaticText->new(
-        $r_head_panel,
-        -1,
-        'Name of generated file(s)',);
-
-    $headingH->Add($l_head_panel, 0, wxALL, 20);
-    $headingH->AddStretchSpacer(1);
-    $headingH->Add($r_head_panel, 0, wxALL, 20);
-
-
-    $self->{'sectionYInc'} = 35; # how much to increment the Y value each time
-    $self->{'sectionY'} = 110-$self->{'sectionYInc'};
-      # at what Y value the section lines will start
-
-    $outerV->Add($introH);
-#    $outerV->Add($headingH);
+    $self->{'sizer'}->Add($introH, 0, wxEXPAND | wxLEFT | wxTOP | wxRIGHT, 20);
 
     EVT_BUTTON($self, $addSectionBtn, \&OnAddSection);
-#    EVT_BUTTON($self, $genPDFBtn, \&OnGenPDF);
-
-    $self->SetSizer($outerV);
-    return $self;
+    EVT_BUTTON($self, $genPDFBtn, \&OnGenPDF);
 }
 
 sub addSectionLine {
-    my $self = shift;
-    my $path = shift;
-    $self->{'sectionY'} += $self->{'sectionYInc'};
+    my ($self, $path) = @_;
+    my $sizer = $self->{'sizer'};
 
-    # path
-    my $p = Wx::TextCtrl->new($self,
-                      -1,
-                      $path,
-                      [20,$self->{'sectionY'}],
-                      [350,30],
-        );
+    # show the header since we are adding sections
+    $self->{'sectionSizer'}->Show(0,1);
+    $self->{'sectionSizer'}->Show(1,1);
+    $self->{'sectionSizer'}->Show(2,1);
 
-    # name
-    my $n = Wx::TextCtrl->new($self,
-                      -1,
-                      "$path.pdf",
-                      [380,$self->{'sectionY'}],
-                      [250,30],
-        );
+    # XXX should these be in panels?
+    my $p = Wx::TextCtrl->new(
+        $self,
+        -1,
+        $path,);
+    my $n = Wx::TextCtrl->new(
+        $self,
+        -1,
+        "$path.pdf",);
+    my $del = Wx::Button->new(    # XXX replace text with icon bmp
+        $self,
+        -1,
+        'Delete',);
 
-    # delete
-    # XXX add icon bmp
-    my $del = Wx::Button->new($self,
-                              -1,
-                              'Delete',
-                              [640,$self->{'sectionY'}],
-        );
+    $self->{'sectionSizer'}->Add($p, 1, wxEXPAND);
+    $self->{'sectionSizer'}->Add($n, 1, wxEXPAND);
+    $self->{'sectionSizer'}->Add($del, 0);
+
+    $sizer->Layout;
 
     EVT_BUTTON($self, $del, \&OnDelSection);
 
@@ -124,28 +105,63 @@ sub addSectionLine {
     push @{$self->{'paths'}}, $path;
 }
 
+sub addHeader {
+    my $self = shift;
+    my $sizer = $self->{'sizer'};
+
+    $self->{'sectionSizer'} = Wx::FlexGridSizer->new(0,3,2,5);
+    $self->{'sectionSizer'}->AddGrowableCol(0, 1); # expand columns 1
+    $self->{'sectionSizer'}->AddGrowableCol(1, 1); # and 2
+    my $l_head_panel = Wx::Panel->new($self);
+    my $head1 = Wx::StaticText->new(
+        $l_head_panel,
+        -1,
+        'Path to Section',);
+    my $r_head_panel = Wx::Panel->new($self);
+    my $head2 = Wx::StaticText->new(
+        $r_head_panel,
+        -1,
+        'Name of generated file',);
+
+    $self->{'sectionSizer'}->Add($l_head_panel, 1);
+    $self->{'sectionSizer'}->Add($r_head_panel, 1);
+    $self->{'sectionSizer'}->AddSpacer(1); # for 3rd column
+    $sizer->Add($self->{'sectionSizer'}, 0, wxEXPAND | wxALL, 40);
+
+    # hide it until a section is added
+    $self->{'sectionSizer'}->Hide(0); # 3 elements in the header
+    $self->{'sectionSizer'}->Hide(1);
+    $self->{'sectionSizer'}->Hide(2);
+    $self->{'sectionSizer'}->Layout;
+}
+
 sub OnDelSection {
     my ($self, $event) = @_;
-    my $p = $self->{'paths'};
-    my $l = $self->{'lines'};
 
     # find the delete button that triggered this deletion
-    my $index;
-    for ($index = 0; $index < $#$l; $index++) {
-        last if $$l[$index]->[2]->GetId == $event->GetId;
+    # and remove the line
+    my $index = 0;
+    for my $line (@{$self->{'lines'}}) {
+        if ($line->[2]->GetId == $event->GetId) {
+            # detach line from sizer and then delete it
+            $self->{'sectionSizer'}->Detach($_) for @$line;
+            $_->Destroy for @$line;
+            last;
+        }
+        $index++;
     }
 
-    # remove all entries after the deleted line, inclusive
-    my @paths = splice(@$p, $index);
-    my @lines = splice(@$l, $index);
-    for my $line (@lines) {
-        $_->Destroy for @$line; # delete all widgets in the line
+    # remove the line from our list
+    splice(@{$self->{'lines'}}, $index, 1);
+
+    # if there are no lines left, hide the header
+    if ($#{$self->{'lines'}} == -1) {
+        $self->{'sectionSizer'}->Hide(0);
+        $self->{'sectionSizer'}->Hide(1);
+        $self->{'sectionSizer'}->Hide(2); 
     }
 
-    # redraw them one line higher, (not including the deleted line, of course)
-    $self->{'sectionY'} -= $self->{'sectionYInc'} for @paths; # reset y position
-    shift @paths; # remove deleted line from @paths
-    $self->addSectionLine($_) for @paths;
+    $self->{'sectionSizer'}->Layout;
 }
 
 sub OnAddSection {
