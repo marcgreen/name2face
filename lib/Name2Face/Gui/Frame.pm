@@ -10,7 +10,11 @@ use Wx::Event qw/EVT_BUTTON/;
 
 use Name2Face::Base;
 
-# XXX TODO -- add scrollbar if there are more sections than window space
+# XXX TODO
+# -- add scrollbar if there are more sections than window space
+# -- add menu bar
+# -- add instructions (e.g., tell user what a "section" should be)
+# -- warn/prompt if overwriting a file
 
 sub new {
     my $ref = shift;
@@ -184,12 +188,30 @@ sub onAddSection {
 }
 
 sub onGenPDF {
-    my($self, $event) = @_;
+    my ($self, $event) = @_;
     my $n2f = Name2Face::Base->new();
+    return unless $self->{'lines'};
+
+    my $num_files = scalar @{$self->{'lines'}};
+
+    my $progress = Wx::ProgressDialog->new(
+        'Generate PDFs',
+        '',
+        $num_files,
+        $self,
+        wxPD_AUTO_HIDE|wxPD_APP_MODAL|wxPD_ELAPSED_TIME
+        );
+
+    my $cur_file = 0;
     for my $line (@{$self->{'lines'}}) {
+        my ($path, $name) = map { $_->GetValue } ($line->[0], $line->[1]);
+        $progress->Update($cur_file++, "File $cur_file of $num_files");
         # path to section => name of output file
-        $n2f->name2face($line->[0]->GetValue => $line->[1]->GetValue);
+        $n2f->name2face($path, $name);
+
     }
+
+    $progress->Destroy;  
 }
 
 1;
