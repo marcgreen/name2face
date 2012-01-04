@@ -12,9 +12,10 @@ use Name2Face::Base;
 
 # XXX TODO
 # -- add scrollbar if there are more sections than window space
-# -- add menu bar
-# -- add instructions (e.g., tell user what a "section" should be)
 # -- warn/prompt if overwriting a file
+# -- use global $width and $height to calculate initial Wraps and sizes
+
+my ($width, $height) = (800, 600);
 
 sub new {
     my $ref = shift;
@@ -23,7 +24,7 @@ sub new {
         -1,              # ID -1 means any
         'Name2Face',     # title
         wxDefaultPosition,
-        [700,400],
+        [$width, $height],
         );
 
     $self->{'sizer'} = Wx::BoxSizer->new(wxVERTICAL); # top level sizer
@@ -37,6 +38,21 @@ sub addInstructions() {
     my $self = shift;
 
     my $introH = Wx::BoxSizer->new(wxHORIZONTAL);
+
+    # description of program
+    my $desc_panel = Wx::Panel->new($self);
+    my $desc = Wx::StaticText->new(
+        $desc_panel,
+        -1,
+        <<DESC,
+This program generates a pdf file containing a table of student's names and their pictures, among other small details. The purpose is to help professors put names to their student's faces.
+
+Each section to be processed ought to be a directory of a downloaded Faculty Class List, achieved by saving the bannerweb page as a 'Web page, Complete' in a web browser. This means it should be a directory in which there is a single html file of the Faculty Class List and an accompanying directory that holds the student pictures.
+DESC
+        );
+    $desc->Wrap($width-40); # -40 for padding on each side
+
+    $self->{'sizer'}->Add($desc_panel, 0, wxEXPAND|wxLEFT|wxTOP|wxRIGHT, 20);
 
     # left side of the instructions
     my $l_instr_panel = Wx::Panel->new($self);
@@ -208,7 +224,6 @@ sub onGenPDF {
         $progress->Update($cur_file++, "File $cur_file of $num_files");
         # path to section => name of output file
         $n2f->name2face($path, $name);
-
     }
 
     $progress->Destroy;  
