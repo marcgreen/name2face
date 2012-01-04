@@ -8,6 +8,10 @@ use Data::Dumper;
 use Wx qw/:everything/;
 use Wx::Event qw/EVT_BUTTON/;
 
+use Name2Face::Base;
+
+# XXX TODO -- add scrollbar if there are more sections than window space
+
 sub new {
     my $ref = shift;
     my $self = $ref->SUPER::new(
@@ -35,7 +39,7 @@ sub addInstructions() {
     my $instr1 = Wx::StaticText->new(
         $l_instr_panel,     # Parent window
         -1,         # no window ID
-        'Add as many sections as you want, they will appear in fields below:',
+        'Add as many sections as you want, they will appear in fields below:'
         );
     $instr1->Wrap(250);
     my $addSectionBtn = Wx::Button->new(
@@ -64,52 +68,21 @@ sub addInstructions() {
     $introH->AddStretchSpacer(1);
     $introH->Add($r_instr_panel, 0);
 
-    $self->{'sizer'}->Add($introH, 0, wxEXPAND | wxLEFT | wxTOP | wxRIGHT, 20);
+    $self->{'sizer'}->Add($introH, 0, wxEXPAND|wxLEFT|wxTOP|wxRIGHT, 20);
 
-    EVT_BUTTON($self, $addSectionBtn, \&OnAddSection);
-    EVT_BUTTON($self, $genPDFBtn, \&OnGenPDF);
-}
-
-sub addSectionLine {
-    my ($self, $path) = @_;
-    my $sizer = $self->{'sizer'};
-
-    # show the header since we are adding sections
-    $self->{'sectionSizer'}->Show(0,1);
-    $self->{'sectionSizer'}->Show(1,1);
-    $self->{'sectionSizer'}->Show(2,1);
-
-    # XXX should these be in panels?
-    my $p = Wx::TextCtrl->new(
-        $self,
-        -1,
-        $path,);
-    my $n = Wx::TextCtrl->new(
-        $self,
-        -1,
-        "$path.pdf",);
-    my $del = Wx::Button->new(    # XXX replace text with icon bmp
-        $self,
-        -1,
-        'Delete',);
-
-    $self->{'sectionSizer'}->Add($p, 1, wxEXPAND);
-    $self->{'sectionSizer'}->Add($n, 1, wxEXPAND);
-    $self->{'sectionSizer'}->Add($del, 0);
-
-    $sizer->Layout;
-
-    EVT_BUTTON($self, $del, \&OnDelSection);
-
-    push @{$self->{'lines'}}, [$p, $n, $del]; # so we can delete it if necessary
-    push @{$self->{'paths'}}, $path;
+    EVT_BUTTON($self, $addSectionBtn, \&onAddSection);
+    EVT_BUTTON($self, $genPDFBtn, \&onGenPDF);
 }
 
 sub addHeader {
     my $self = shift;
     my $sizer = $self->{'sizer'};
 
-    $self->{'sectionSizer'} = Wx::FlexGridSizer->new(0,3,2,5);
+    $self->{'sectionSizer'} = Wx::FlexGridSizer->new(
+        0, # number of rows (0 means dynamically determined)
+        3, # number of columns
+        2, # space between rows
+        5); # space between columns
     $self->{'sectionSizer'}->AddGrowableCol(0, 1); # expand columns 1
     $self->{'sectionSizer'}->AddGrowableCol(1, 1); # and 2
     my $l_head_panel = Wx::Panel->new($self);
@@ -121,7 +94,7 @@ sub addHeader {
     my $head2 = Wx::StaticText->new(
         $r_head_panel,
         -1,
-        'Name of generated file',);
+        'Name of generated file (without file extension)',);
 
     $self->{'sectionSizer'}->Add($l_head_panel, 1);
     $self->{'sectionSizer'}->Add($r_head_panel, 1);
@@ -135,7 +108,43 @@ sub addHeader {
     $self->{'sectionSizer'}->Layout;
 }
 
-sub OnDelSection {
+sub addSectionLine {
+    my ($self, $path) = @_;
+    my $sizer = $self->{'sizer'};
+
+    # show the header since we are adding sections
+    $self->{'sectionSizer'}->Show(0,1);
+    $self->{'sectionSizer'}->Show(1,1);
+    $self->{'sectionSizer'}->Show(2,1);
+
+    # XXX should these be in panels?
+    # (then they won't wxEXPAND?)
+    my $p = Wx::TextCtrl->new(
+        $self,
+        -1,
+        $path,);
+    my $n = Wx::TextCtrl->new(
+        $self,
+        -1,
+        $path,);
+    my $del = Wx::Button->new(    # XXX replace text with icon bmp
+        $self,
+        -1,
+        'Delete',);
+
+    $self->{'sectionSizer'}->Add($p, 1, wxEXPAND);
+    $self->{'sectionSizer'}->Add($n, 1, wxEXPAND);
+    $self->{'sectionSizer'}->Add($del, 0);
+
+    $sizer->Layout;
+
+    EVT_BUTTON($self, $del, \&onDelSection);
+
+    # keep track of each line so we can retrieve path/name or delete it
+    push @{$self->{'lines'}}, [$p, $n, $del];
+}
+
+sub onDelSection {
     my ($self, $event) = @_;
 
     # find the delete button that triggered this deletion
@@ -164,18 +173,23 @@ sub OnDelSection {
     $self->{'sectionSizer'}->Layout;
 }
 
-sub OnAddSection {
+sub onAddSection {
     my($self, $event) = @_;
     my $dlg = Wx::DirDialog->new($self, "Choose a Section");
     if ($dlg->ShowModal == wxID_OK) {
-        say $dlg->GetPath();
-        $self->addSectionLine($dlg->GetPath()); # Show the user
+        #say $dlg->GetPath();
+        $self->addSectionLine($dlg->GetPath()); # Display/bookkeep section
     }
     $dlg->Destroy;
 }
 
 sub onGenPDF {
-
+    my($self, $event) = @_;
+    my $n2f = Name2Face::Base->new();
+    for my $line (@{$self->{'lines'}}) {
+        # path to section => name of output file
+        $n2f->name2face($line->[0]->GetValue => $line->[1]->GetValue);
+    }
 }
 
 1;
