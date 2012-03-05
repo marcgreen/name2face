@@ -14,6 +14,7 @@ use Name2Face::Base;
 # -- add scrollbar if there are more sections than window space
 # -- warn/prompt if overwriting a file
 # -- use global $width and $height to calculate initial Wraps and sizes
+# -- replace "Delete" text with a bitmap of a white X on red background
 
 my ($width, $height) = (800, 600);
 
@@ -51,7 +52,6 @@ Each section to be processed ought to be a directory of a downloaded Faculty Cla
 DESC
         );
     $desc->Wrap($width-40); # -40 for padding on each side
-
     $self->{'sizer'}->Add($desc_panel, 0, wxEXPAND|wxLEFT|wxTOP|wxRIGHT, 20);
 
     # left side of the instructions
