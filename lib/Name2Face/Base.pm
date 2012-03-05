@@ -49,7 +49,8 @@ sub name2face {
 
         $path = File::Spec->catdir($path); # remove trailing /
         find(\&find_file, $path); # Finds html file, puts name into $File
-        my $curfile = $File;
+        my $curfile = $File or 
+            die "Could not find expected html file in Section directory";
 
         # Extracts course info and student corpus from file
         my ($course_info, @students) = $self->parse_file($curfile);
@@ -101,7 +102,9 @@ END_HTML
 
 # Find html file
 sub find_file {
-    $File = $File::Find::name if /FacClaList\.html$/; # find the right html file
+    $File = $File::Find::name  # find the right html file
+        if /\.html$/ and # it is an html file and
+        $File::Find::dir !~ /_files/; # it is in the top level of the Section
 }
 
 # Extract course info and student corpus from html file
