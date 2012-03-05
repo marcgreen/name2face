@@ -8,6 +8,9 @@ use File::Spec;
 use Getopt::Long;
 use Name2Face::Base;
 
+# put htmldoc in user's path
+$ENV{'PATH'} .= ':/home/marcgreen/htmldoc/bin' if $ENV{'PATH'} !~ /htmldoc/;
+
 GetOptions(
     'html!'  => \(my $Gen_html = 0),# Don't generate .html by default
     'pdf!'   => \(my $Gen_pdf = 1), # Generate .pdf by default
