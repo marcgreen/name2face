@@ -95,7 +95,8 @@ END_HTML
             $htmldoc->path(dirname($path)); # to tell it where to find images
             my $pdf = $htmldoc->generate_pdf();
             $pdf->to_file("$name.pdf");
-            warn "something went wrong with $name.pdf" unless -e "$name.pdf";
+            warn "something went wrong with $name.pdf"
+                unless -e -s "$name.pdf";
         }
     }
 }
