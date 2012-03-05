@@ -46,11 +46,11 @@ Options
                and the nth one will be applied to the nth section.
   --[no]pdf    generate a pdf file of the finished output (on by default).
 
-    The 'section/' to be processed ought to be a directory of a downloaded
+    The "section" to be processed ought to be a directory of a downloaded
     Faculty Class List, achieved by saving the bannerweb page as a
     'Web page, Complete' in a web browser. This means it should be a directory
     in which there is a single html file of the Faculty Class List and an
-    accompanying directory that holds the student pictures.
+    accompanying directory that holds the student pictures. 
 
 USAGE
 }
