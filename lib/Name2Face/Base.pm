@@ -213,8 +213,8 @@ sub htmlify_students {
     my ($dir, @students) = @_;
     my $cell_space = 20; # space between table cells
     my $num_cols = $self->{'num_cols'}; # 3 students per row by default
-    my $tot_rows = $#students % $num_cols ? int($#students / $num_cols)
-                                          : $#students / $num_cols - 1;
+    my $tot_rows = @students % $num_cols ? int(@students / $num_cols) + 1
+                                         : @students / $num_cols;
     my $img_h = 100; # height in px
     my $table = "<table cellspacing='$cell_space'>";
     for my $i (1..$tot_rows) {
