@@ -1,18 +1,42 @@
 This program generates a pdf file (and optionally an html file) containing a table of student's names and their pictures, among other small details. The purpose is to help professors put names to their student's faces.
 
-To use this program, you will need to download the class list (from bannerweb) for which you want a pdf generated. The downloaded directory may be referred to as a "section" in instructions below. Follow the instructions below for common browsers and operating systems on how to do this.
+Step 1:
+=======
+To use this program, you will need to download the class list from bannerweb for which you want a pdf generated. 
 
+First, create a new directory on your computer. The name of this will be the name of the generated pdf. This new directory will be referred to as the "section" that you use to generate the pdf.
+
+Go to 'Detailed Class List' for your course in Banner Web and follow the instructions below for common browsers and operating systems on how to save the webpage.
+
+Ensure that the only contents of the new directory are a folder whose name ends in "_files", e.g., "Section1_files", and a single html file, e.g., "Section1.html".
+
+Step 2:
+=======
 Once you have the section(s) downloaded, you will need to move it to the CCC server, ccc.wpi.edu, because that is where the name2face program is located. Follow the instructions below for how to do this on common operating systems.
 
+Step 3:
+=======
 Once the section has been moved to the ccc machine, you will need to ssh into the ccc machine and run the program. As before, there are instructions provided below on how to do this depending on your operating system.
 
+Step 4:
+=======
 You should now be logged into the ccc machine and at a shell prompt. Execute the following command to generate the pdf file. Note that the leading '$ ' indicates the shell prompt, so don't type that part.
 
 $ /home/marcgreen/n2f/name2face Section1/
 
-Replace "Section1/" with the name of the section you downloaded.
+Replace "Section1/" with the name of the section downloaded and transferred.
 
-Note that the command should not output anything on the terminal. (If it did, something probably went wrong.) Once the command finishes, there should now exist a new pdf file in your current working directory. The remaining task is to transfer it back to your personal current from the ccc server. Follow the instructions below for your given operating system.
+Note that the command should not output anything on the terminal. (If it did, something probably went wrong.) Once the command finishes, there should now exist a new pdf file in your current working directory, Section1.pdf.
+
+Execute the following command to delete the directory you copied over, so it does not interfere with any future usage. This does not delete the new pdf file, just the directory used to generate it.
+
+$ rm -r Section1
+
+Replace "Section1" with the name of the section.
+
+Step 5:
+=======
+The remaining task is to transfer the new pdf back to your personal computer from the ccc server. Follow the instructions below for your given operating system.
 
 
 DOWNLOADING A CLASS LIST
@@ -38,14 +62,14 @@ Firefox:
 
 UNIX
 
-Firefox:
+Firefox: Click the Firefox dropdown menu in the top left corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Web Page, complete" is selected in the lower right corner, click "Save".
 
-Chrome:
+Chromium: Click the wrench icon in the top right corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Webpage, Complete" is selected in the lower right corner, click "Save".
 
 =============
 
 
-COPYING THE CLASS LIST TO THE CCC MACHINE
+COPYING THE SECTION TO THE CCC MACHINE
 =============================
 
 WINDOWS 7
@@ -55,6 +79,16 @@ MAC OSX
 =============
 
 UNIX
+
+Open a terminal and execute the following command:
+
+scp -r Section1 username@ccc.wpi.edu:~
+
+Replace "Section1" with the name of the section you downloaded, replace "username" with your WPI username.
+
+If a security warning is issued, indicate that you wish to continue (i.e., type 'yes').
+
+Input your WPI password when prompted.
 =============
 
 
@@ -68,10 +102,18 @@ MAC OSX
 =============
 
 UNIX
+
+Open a terminal and execute the following command:
+
+$ ssh username@ccc.wpi.edu
+
+Replace 'username' with your WPI username.
+
+Input your WPI password when prompted.
 =============
 
 
-COPYING THE CLASS LIST FROM THE CCC MACHINE
+RETRIEVING THE PDF FROM THE CCC MACHINE
 =============================
 
 WINDOWS 7
@@ -81,4 +123,12 @@ MAC OSX
 =============
 
 UNIX
+
+Open a terminal and execute the following command:
+
+scp username@ccc.wpi.edu:~/Section1.pdf .
+
+Replace "Section1" with the name of the section you downloaded (make sure to keep the ".pdf" part in tact), replace "username" with your WPI username.
+
+Input your WPI password when prompted.
 =============

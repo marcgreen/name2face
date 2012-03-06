@@ -1,0 +1,15 @@
+This program generates a pdf file (and optionally an html file) containing a table of student's names and their pictures, among other small details. The purpose is to help professors put names to their student's faces.
+
+The following steps briefly outline how to do this. If you would like an in-depth how-to, read "README" instead.
+
+1. Go to 'Detailed Class List' for your course in Banner Web and save it as a 'Web Page, Complete' in a newly created directory, e.g., "Section1/". Ensure that the only contents of the directory are a folder whose name ends in "_files", e.g., "Section1_files", and a single html file, e.g., "Section1.html". This directory is referred to as a "section". The name of this section will be used as the name of the generated pdf.
+ 
+2. Transfer the section to your account on ccc.wpi.edu.
+
+3. SSH into ccc.wpi.edu and execute the following command
+
+$ /home/marcgreen/n2f/name2face Section1/
+
+Replace "Section1/" with the name of the section downloaded and transferred.
+
+4. Transfer the newly generated pdf, Section1.pdf, back to your current computer
