@@ -1,0 +1,84 @@
+This program generates a pdf file (and optionally an html file) containing a table of student's names and their pictures, among other small details. The purpose is to help professors put names to their student's faces.
+
+To use this program, you will need to download the class list (from bannerweb) for which you want a pdf generated. The downloaded directory may be referred to as a "section" in instructions below. Follow the instructions below for common browsers and operating systems on how to do this.
+
+Once you have the section(s) downloaded, you will need to move it to the CCC server, ccc.wpi.edu, because that is where the name2face program is located. Follow the instructions below for how to do this on common operating systems.
+
+Once the section has been moved to the ccc machine, you will need to ssh into the ccc machine and run the program. As before, there are instructions provided below on how to do this depending on your operating system.
+
+You should now be logged into the ccc machine and at a shell prompt. Execute the following command to generate the pdf file. Note that the leading '$ ' indicates the shell prompt, so don't type that part.
+
+$ /home/marcgreen/n2f/name2face Section1/
+
+Replace "Section1/" with the name of the section you downloaded.
+
+Note that the command should not output anything on the terminal. (If it did, something probably went wrong.) Once the command finishes, there should now exist a new pdf file in your current working directory. The remaining task is to transfer it back to your personal current from the ccc server. Follow the instructions below for your given operating system.
+
+
+DOWNLOADING A CLASS LIST
+=============================
+
+WINDOWS 7
+
+Internet Explorer:
+
+Firefox:
+
+Chrome:
+
+=============
+
+MAC OSX
+
+Safari:
+
+Firefox:
+
+=============
+
+UNIX
+
+Firefox:
+
+Chrome:
+
+=============
+
+
+COPYING THE CLASS LIST TO THE CCC MACHINE
+=============================
+
+WINDOWS 7
+=============
+
+MAC OSX
+=============
+
+UNIX
+=============
+
+
+CONNECTING TO THE CCC MACHINE
+=============================
+
+WINDOWS 7
+=============
+
+MAC OSX
+=============
+
+UNIX
+=============
+
+
+COPYING THE CLASS LIST FROM THE CCC MACHINE
+=============================
+
+WINDOWS 7
+=============
+
+MAC OSX
+=============
+
+UNIX
+=============
