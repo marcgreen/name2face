@@ -88,10 +88,10 @@ END_HTML
             my $htmldoc = new HTML::HTMLDoc();
             $htmldoc->set_html_content($html);
             $htmldoc->set_page_size('letter');
-            $htmldoc->set_left_margin(1/4,'in');
-            $htmldoc->set_right_margin(1/4,'in');
-            $htmldoc->set_top_margin(1/4,'in');
-            $htmldoc->set_bottom_margin(1/4,'in');
+            $htmldoc->set_left_margin(1,'cm');
+            $htmldoc->set_right_margin(1,'cm');
+            $htmldoc->set_top_margin(1,'cm');
+            $htmldoc->set_bottom_margin(1,'cm');
             $htmldoc->path(dirname($path)); # to tell it where to find images
             my $pdf = $htmldoc->generate_pdf();
             $pdf->to_file("$name.pdf");
@@ -212,7 +212,7 @@ sub format_students {
 sub htmlify_students {
     my $self = shift;
     my ($dir, @students) = @_;
-    my $cell_space = 20; # space between table cells
+    my $cell_space = 15; # space between table cells
     my $num_cols = $self->{'num_cols'}; # 3 students per row by default
     my $tot_rows = @students % $num_cols ? int(@students / $num_cols) + 1
                                          : @students / $num_cols;
@@ -224,7 +224,7 @@ sub htmlify_students {
             my %s = %{shift @students} if @students;
             last unless %s; # did we run out?
             my $img_src = File::Spec->catdir($dir, $s{'img'});
-            $table .= qq|<td><img src="$img_src" |.
+            $table .= qq|<td width="33%"><img src="$img_src" |.
                 qq|alt="No Photo Available" height="${img_h}"> <br />|.
                 qq|<b>$s{'name'}</b><br />|;
             $table .= $#{$s{'majors'}} > 0 ? "Majors: " : "Major: ";
