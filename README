@@ -4,7 +4,7 @@ Step 1:
 =======
 To use this program, you will need to download the class list from bannerweb for which you want a pdf generated. 
 
-First, create a new directory on your computer. The name of this will be the name of the generated pdf. This new directory will be referred to as the "section" that you use to generate the pdf.
+First, create a new directory on your computer. The name of this will be used as the name of the generated pdf, FYI. This new directory will be referred to as the "section" that you use to generate the pdf.
 
 Go to 'Detailed Class List' for your course in Banner Web and follow the instructions below for common browsers and operating systems on how to save the webpage.
 
@@ -16,7 +16,7 @@ Once you have the section(s) downloaded, you will need to move it to the CCC ser
 
 Step 3:
 =======
-Once the section has been moved to the ccc machine, you will need to ssh into the ccc machine and run the program. As before, there are instructions provided below on how to do this depending on your operating system.
+Once the section has been moved to the ccc machine, you will need to connect to the ccc machine and run the name2face program. As before, there are instructions provided below on how to do this depending on your operating system.
 
 Step 4:
 =======
@@ -30,9 +30,11 @@ Note that the command should not output anything on the terminal. (If it did, so
 
 Execute the following command to delete the directory you copied over, so it does not interfere with any future usage. This does not delete the new pdf file, just the directory used to generate it.
 
-$ rm -r Section1
+$ rm -r Section1/
 
 Replace "Section1" with the name of the section.
+
+You can now close your connection to the ccc machine.
 
 Step 5:
 =======
@@ -45,10 +47,13 @@ DOWNLOADING A CLASS LIST
 WINDOWS 7
 
 Internet Explorer:
+Click the gear icon in the top right corner of the browser, click "File", click "Save as...", select the directory you made earlier as the location in which to save this webpage, make sure "Webpage, complete (*.htm;*.html" is selected in the "Save as type" dropdown menu, and click Save.
 
 Firefox:
+Click the Firefox dropdown menu in the top left corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Web Page, complete" is selected in the "Save as type" dropdown menu, and click Save.
 
 Chrome:
+Click the wrench icon in the top right corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Webpage, Complete" is selected in the "Save as type" dropdown menu, click "Save".
 
 =============
 
@@ -62,9 +67,11 @@ Firefox:
 
 UNIX
 
-Firefox: Click the Firefox dropdown menu in the top left corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Web Page, complete" is selected in the lower right corner, click "Save".
+Firefox:
+Click the Firefox dropdown menu in the top left corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Web Page, complete" is selected in the lower right corner, click "Save".
 
-Chromium: Click the wrench icon in the top right corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Webpage, Complete" is selected in the lower right corner, click "Save".
+Chromium:
+Click the wrench icon in the top right corner, click "Save Page As", select the directory you made earlier as the location in which to save this webpage, make sure "Webpage, Complete" is selected in the lower right corner, click "Save".
 
 =============
 
@@ -73,6 +80,10 @@ COPYING THE SECTION TO THE CCC MACHINE
 =============================
 
 WINDOWS 7
+
+You must be connected to the WPI network for these instructions to work. If you are off campus, look at the help guide on the ccc website regarding connecting to WPI's virtual private network (VPN).
+
+Open the start menu and type "\\filer.wpi.edu\HOME" into the search bar. Drag the section from your computer to this folder.
 =============
 
 MAC OSX
@@ -96,6 +107,10 @@ CONNECTING TO THE CCC MACHINE
 =============================
 
 WINDOWS 7
+
+The following instructions make use of PuTTY to connect to the ccc machines. You can download PuTTY from 'http://the.earth.li/~sgtatham/putty/latest/x86/putty.exe'. Note that it does not need to be installed, you can simply double click the icon to run it.
+
+Open PuTTY and enter 'ccc.wpi.edu' as the Host Name and click Connect. Accept the security alert if one pops up. Type in your WPI username when prompted, and enter your password at the next prompt. You should now see a login message and a shell prompt, and be able to type.
 =============
 
 MAC OSX
@@ -117,6 +132,10 @@ RETRIEVING THE PDF FROM THE CCC MACHINE
 =============================
 
 WINDOWS 7
+
+You must be connected to the WPI network for these instructions to work. If you are off campus, look at the help guide on the wpi website regarding connecting to WPI's virtual private network (VPN).
+
+Open the start menu and type "\\filer.wpi.edu\HOME" into the search bar. Drag the newly generated pdf file to your personal computer.
 =============
 
 MAC OSX
